@@ -1,0 +1,5 @@
+# secrets.py
+WIFI_SSID = "TU_SSID"
+WIFI_PASSWORD = "TU_PASSWORD"
+BROKER_IP = "192.168.1.42"   # <- IP de tu RPi5 (ajusta)
+BROKER_PORT = 1883
