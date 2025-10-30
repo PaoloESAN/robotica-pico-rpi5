@@ -87,23 +87,9 @@ Vamos a usar `umqtt.simple` (disponible en builds MicroPython)
 
 Si la librería `umqtt.simple` no está disponible en tu Pico W, puedes instalarla de dos formas:
 
-### Opción A: Descargar manualmente y subir con Thonny
+### Instalar con mpremote (línea de comandos)
 
-1. En tu navegador, abre el [repositorio oficial de MicroPython](https://github.com/micropython/micropython-lib/tree/master/umqtt.simple)
-
-2. Descarga el archivo `umqtt/simple.py` y guárdalo localmente
-
-3. Abre **Thonny** y conecta la Pico W
-
-4. Ve a **Archivo → Guardar como → En el dispositivo**
-
-5. Guárdalo en la ruta `/lib/umqtt/simple.py`
-   
-   > **Nota:** Si la carpeta `/lib` no existe, créala con clic derecho → "Nueva carpeta"
-
-### Opción B: Instalar con mpremote (línea de comandos)
-
-Si prefieres usar la terminal desde tu Raspberry Pi 5:
+Si prefieres usar la terminal desde tu Raspberry Pi 5 o windows:
 
 1. **Instala mpremote:**
    ```bash
@@ -116,7 +102,12 @@ Si prefieres usar la terminal desde tu Raspberry Pi 5:
    ```bash
    mpremote connect /dev/ttyACM0 mip install umqtt.simple
    ```
-   
+
+   Alternativa si estas en windows(reemplazar COM10 por otro si es necesario, esto se puede visualizar en administrador de dispositivos, luego en ver: ver dispositivos ocultos(conectar la rasberry pi pico w de manera normal sin presionar el boton))
+   ```bash
+   mpremote connect COM10 mip install umqtt.simple
+   ```
+
    > **Nota:** `mip` es el gestor de paquetes de MicroPython (similar a `pip`)
 
 ### Verificar la instalación
@@ -142,15 +133,22 @@ El archivo `main.py` se encuentra en la carpeta `/picow` y hace lo siguiente:
 
 La forma más fácil desde el RPi5 es usar **Thonny** (IDE): Conecta la Pico W, en Thonny selecciona "MicroPython (Raspberry Pi Pico)" y sube los archivos `main.py` y `secrets.py` al dispositivo (guardar en device).
 
-Igualmente puedes usar la siguiente alternativa:
-usa `ampy` o `rshell` para copiar archivos:
+### Opción alternativa: Subir archivos con mpremote
+
+Si prefieres usar la terminal desde tu Raspberry Pi 5:
 
 ```bash
-# ejemplo con ampy (en RPi5)
-pip3 install adafruit-ampy
-ampy --port /dev/ttyACM0 put secrets.py
-ampy --port /dev/ttyACM0 put main.py
+# Instala mpremote
+pip3 install mpremote
+
+# Copia los archivos a la Pico W
+mpremote connect /dev/ttyACM0 fs cp secrets.py :secrets.py
+mpremote connect /dev/ttyACM0 fs cp main.py :main.py
 ```
+Si estas en windows usar: COM10 u otro en lugar de: /dev/ttyACM0
+Se puede ver esto en administrador de dispositivos, luego en ver, dispositivos ocultos (no mantener el boton presionado del rasberry pi pico w)
+
+> **Nota:** El `:` antes del nombre del archivo indica que se copiará a la raíz del sistema de archivos de la Pico W.
 
 # 6) Script Python en RPi5 (host) que se suscribe al topic
 
