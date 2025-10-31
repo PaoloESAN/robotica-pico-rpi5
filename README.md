@@ -129,11 +129,30 @@ El archivo `main.py` se encuentra en la carpeta `/picow` y hace lo siguiente:
 - Conecta al broker en la IP del RPi5
 - Publica `{"estado":"conectado"}` cada 5 segundos en `robot/pico/estado`
 
+## ⚠️ Configurar el archivo secrets.py
+
+El archivo `secrets.py` contiene **tus credenciales personales** de Wi-Fi y la dirección del broker MQTT. 
+
+**IMPORTANTE:** Debes editar este archivo con tus propios datos antes de subirlo a la Pico W.
+
+Ejemplo del contenido de `secrets.py`:
+
+```python
+# secrets.py - Credenciales de red (EDITAR CON TUS DATOS)
+WIFI_SSID = "TU_NOMBRE_DE_WIFI"        # ← Cambiar por el nombre de tu red Wi-Fi
+WIFI_PASSWORD = "TU_CONTRASEÑA_WIFI"    # ← Cambiar por tu contraseña Wi-Fi
+MQTT_BROKER = "192.168.1.42"            # ← Cambiar por la IP de tu RPi5 (ver paso 3)
+```
+
 ### Cómo subir main.py y secrets.py a la Pico W:
+
+**Antes de continuar, asegúrate de haber editado `secrets.py` con tus credenciales.**
 
 La forma más fácil desde el RPi5 es usar **Thonny** (IDE): Conecta la Pico W, en Thonny selecciona "MicroPython (Raspberry Pi Pico)" y sube los archivos `main.py` y `secrets.py` al dispositivo (guardar en device).
 
 ### Opción alternativa: Subir archivos con mpremote
+
+**Recuerda editar `secrets.py` con tus credenciales antes de copiar los archivos.**
 
 Si prefieres usar la terminal desde tu Raspberry Pi 5:
 
@@ -141,12 +160,13 @@ Si prefieres usar la terminal desde tu Raspberry Pi 5:
 # Instala mpremote
 pip3 install mpremote
 
-# Copia los archivos a la Pico W
+# Copia los archivos a la Pico W (asegúrate de estar en la carpeta correcta)
 mpremote connect /dev/ttyACM0 fs cp secrets.py :secrets.py
 mpremote connect /dev/ttyACM0 fs cp main.py :main.py
 ```
-Si estas en windows usar: COM10 u otro en lugar de: /dev/ttyACM0
-Se puede ver esto en administrador de dispositivos, luego en ver, dispositivos ocultos (no mantener el boton presionado del rasberry pi pico w)
+
+Si estás en Windows, usa `COM10` u otro puerto en lugar de `/dev/ttyACM0`.
+Se puede ver esto en Administrador de dispositivos, luego en Ver → Dispositivos ocultos (conectar la Raspberry Pi Pico W sin presionar el botón BOOTSEL).
 
 > **Nota:** El `:` antes del nombre del archivo indica que se copiará a la raíz del sistema de archivos de la Pico W.
 
@@ -185,3 +205,62 @@ mosquitto_pub -h localhost -p 1883 -t robot/pico/estado -m '{"test":"hola"}'
 ```
 
 Si `mosquitto_sub` recibe mensajes, el broker funciona y la red está bien configurada. (Si deseas probar desde otra máquina en la misma LAN, cambia `-h localhost` por la IP de la RPi5).
+
+---
+
+# 8) Detección de objetos con cámara usando TensorFlow Lite
+
+Esta sección explica cómo usar la cámara en el RPi5 para detectar objetos localmente usando TensorFlow Lite y MobileNet SSD.
+
+## Paso 1: Instalar dependencias en RPi5
+
+```bash
+# Actualizar sistema
+sudo apt update && sudo apt upgrade -y
+
+# Instalar OpenCV y otras librerías
+sudo apt install -y python3-opencv python3-pip
+pip3 install opencv-python tflite-runtime paho-mqtt numpy pillow
+```
+
+> **Nota:** Si `tflite-runtime` da problemas durante la instalación, prueba con:
+> ```bash
+> pip3 install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
+> ```
+
+## Paso 2: Descargar modelo pre-entrenado (MobileNet SSD v1)
+
+Este modelo es ligero y rápido, ideal para dispositivos como Raspberry Pi.
+
+```bash
+# Crear carpeta para el modelo
+mkdir -p ~/ai_detection
+cd ~/ai_detection
+
+# Descargar MobileNet SSD v1 (optimizado para TensorFlow Lite)
+wget https://storage.googleapis.com/download.tensorflow.org/models/tflite/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip
+unzip coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip
+
+# Descargar archivo de etiquetas (COCO dataset)
+wget https://raw.githubusercontent.com/tensorflow/models/master/research/object_detection/data/mscoco_label_map.pbtxt -O labelmap.txt
+```
+
+Después de este paso, deberías tener en `~/ai_detection/`:
+- `detect.tflite` — Modelo de detección
+- `labelmap.txt` — Etiquetas de objetos detectables (persona, auto, perro, etc.)
+
+## Paso 3: Script de detección con cámara
+
+El script `InspectionVideoSystem.py` en la carpeta `/rpi5` realiza:
+- Captura de video desde la cámara del RPi5
+- Detección de objetos en tiempo real usando TensorFlow Lite
+- Publicación de detecciones al broker MQTT (opcional)
+
+Para ejecutarlo:
+
+```bash
+cd ~/rpi5
+python3 InspectionVideoSystem.py
+```
+
+> **Tip:** Asegúrate de que la cámara esté habilitada en `raspi-config` si usas la cámara oficial de Raspberry Pi.

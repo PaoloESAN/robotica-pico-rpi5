@@ -14,9 +14,9 @@ client = mqtt.Client()
 
 try:
     client.connect(BROKER, PORT, 60)
-    print(f"✅ Conectado al broker MQTT en {BROKER}:{PORT}")
+    print(f"Conectado al broker MQTT en {BROKER}:{PORT}")
 except Exception as e:
-    print(f"❌ Error al conectar con el broker MQTT: {e}")
+    print(f"Error al conectar con el broker MQTT: {e}")
     exit()
 
 # --- Modelo MobileNet SSD ---
@@ -78,9 +78,9 @@ while True:
                 })
                 result = client.publish(TOPIC, msg)
                 if result.rc == 0:
-                    print(f"📤 MQTT enviado a {TOPIC}: {msg}")
+                    print(f"MQTT enviado a {TOPIC}: {msg}")
                 else:
-                    print(f"⚠️ Error al publicar en {TOPIC}")
+                    print(f"Error al publicar en {TOPIC}")
 
     cv2.imshow("Detección en Cámara", frame)
     frame_count += 1
@@ -91,4 +91,4 @@ while True:
 cap.release()
 cv2.destroyAllWindows()
 client.disconnect()
-print("🔌 Desconectado del broker MQTT")
+print("Desconectado del broker MQTT")
