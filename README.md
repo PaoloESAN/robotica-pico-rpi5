@@ -70,14 +70,25 @@ Anota la IP (ej. `192.168.1.42`). La Pico W deberá publicar hacia esa IP (broke
 
 # 4) Flashear MicroPython en la Raspberry Pi Pico W
 
-Descarga la última UF2 de MicroPython para RPI_PICO_W desde la web oficial de MicroPython. (En la página de descargas están los UF2 y las instrucciones). 
-[micropython.org](https://micropython.org/download/RPI_PICO_W/)
+La forma más sencilla de instalar MicroPython en tu Pico W es usando **Thonny**:
 
-Con la Pico W desconectada: mantén presionado BOOTSEL, conecta por USB al RPi5, suéltalo — el dispositivo aparecerá como unidad USB llamada RPI-RP2.
+1. **Abre Thonny** (si no lo tienes instalado: `sudo apt install thonny` en RPi5, o descárgalo desde [thonny.org](https://thonny.org) en Windows)
 
-Copia el archivo `.uf2` descargado al volumen RPI-RP2. La Pico W se reiniciará con MicroPython instalado.
+2. **Conecta la Pico W** por USB a tu computadora
 
-(Alternativa: desde REPL `machine.bootloader()` si ya tienes acceso).
+3. En la **esquina inferior derecha** de Thonny, haz clic donde dice el intérprete actual (por ejemplo, "Local Python 3")
+
+4. Selecciona **"MicroPython (Raspberry Pi Pico)"** o **"Configure interpreter..."**
+
+5. Aparecerá una ventana de configuración. Si MicroPython no está instalado:
+   - Haz clic en **"Install or update MicroPython"**
+   - Selecciona tu modelo: **"Raspberry Pi Pico W"**
+   - Haz clic en **"Install"**
+   - Espera a que se complete la instalación
+
+6. Una vez instalado, verás en la consola de Thonny el prompt `>>>` de MicroPython
+
+> **Nota:** Si la Pico W no aparece, intenta mantener presionado el botón **BOOTSEL** mientras la conectas por USB.
 
 # 5) Código MicroPython para la Pico W (publicar cada 5 s)
 
