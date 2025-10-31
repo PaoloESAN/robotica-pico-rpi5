@@ -263,4 +263,4 @@ cd ~/rpi5
 python3 InspectionVideoSystem.py
 ```
 
-> **Tip:** Asegúrate de que la cámara esté habilitada en `raspi-config` si usas la cámara oficial de Raspberry Pi.
+o usando Thonny.
