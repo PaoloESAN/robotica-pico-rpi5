@@ -20,10 +20,10 @@ except Exception as e:
     exit()
 
 # --- Modelo MobileNet SSD ---
-MODEL_DIR = "/home/pi/Desktop"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 net = cv2.dnn.readNetFromCaffe(
-    os.path.join(MODEL_DIR, "MobileNetSSD_deploy.prototxt"),
-    os.path.join(MODEL_DIR, "MobileNetSSD_deploy.caffemodel")
+    os.path.join(SCRIPT_DIR, "MobileNetSSD_deploy.prototxt"),
+    os.path.join(SCRIPT_DIR, "MobileNetSSD_deploy.caffemodel")
 )
 
 CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
@@ -42,7 +42,8 @@ print("Iniciando detección. Presiona 'q' para salir...")
 
 frame_count = 0
 PUB_EVERY_N_FRAMES = 5
-
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 while True:
     ret, frame = cap.read()
     if not ret:

@@ -219,53 +219,32 @@ Si `mosquitto_sub` recibe mensajes, el broker funciona y la red está bien confi
 
 ---
 
-# 8) Detección de objetos con cámara usando TensorFlow Lite
+# 8) Detección de objetos con cámara usando MobileNet SSD
 
-Esta sección explica cómo usar la cámara en el RPi5 para detectar objetos localmente usando TensorFlow Lite y MobileNet SSD.
+Esta sección explica cómo usar la cámara en el RPi5 para detectar objetos localmente usando OpenCV y MobileNet SSD.
 
 ## Paso 1: Instalar dependencias en RPi5
 
 ```bash
-# Actualizar sistema
 sudo apt update && sudo apt upgrade -y
-
-# Instalar OpenCV y otras librerías
 sudo apt install -y python3-opencv python3-pip
-pip3 install opencv-python tflite-runtime paho-mqtt numpy pillow
+pip3 install opencv-python paho-mqtt numpy
 ```
 
-> **Nota:** Si `tflite-runtime` da problemas durante la instalación, prueba con:
-> ```bash
-> pip3 install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
-> ```
+## Paso 2: Archivos del modelo incluidos
 
-## Paso 2: Descargar modelo pre-entrenado (MobileNet SSD v1)
+**Los archivos del modelo MobileNet SSD ya están incluidos en la carpeta `/rpi5` del proyecto:**
+- `MobileNetSSD_deploy.prototxt` — Arquitectura del modelo
+- `MobileNetSSD_deploy.caffemodel` — Pesos pre-entrenados
 
-Este modelo es ligero y rápido, ideal para dispositivos como Raspberry Pi.
-
-```bash
-# Crear carpeta para el modelo
-mkdir -p ~/ai_detection
-cd ~/ai_detection
-
-# Descargar MobileNet SSD v1 (optimizado para TensorFlow Lite)
-wget https://storage.googleapis.com/download.tensorflow.org/models/tflite/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip
-unzip coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip
-
-# Descargar archivo de etiquetas (COCO dataset)
-wget https://raw.githubusercontent.com/tensorflow/models/master/research/object_detection/data/mscoco_label_map.pbtxt -O labelmap.txt
-```
-
-Después de este paso, deberías tener en `~/ai_detection/`:
-- `detect.tflite` — Modelo de detección
-- `labelmap.txt` — Etiquetas de objetos detectables (persona, auto, perro, etc.)
+**No es necesario descargar nada adicional.** El script `InspectionVideoSystem.py` carga automáticamente estos archivos desde su propia carpeta.
 
 ## Paso 3: Script de detección con cámara
 
 El script `InspectionVideoSystem.py` en la carpeta `/rpi5` realiza:
 - Captura de video desde la cámara del RPi5
-- Detección de objetos en tiempo real usando TensorFlow Lite
-- Publicación de detecciones al broker MQTT (opcional)
+- Detección de objetos en tiempo real usando MobileNet SSD con OpenCV
+- Publicación de detecciones al broker MQTT
 
 Para ejecutarlo:
 
