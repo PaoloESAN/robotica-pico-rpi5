@@ -4,23 +4,8 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 from torchvision import transforms
-import paho.mqtt.client as mqtt
-import json
 import os
 import time
-
-BROKER = "localhost"
-PORT = 1883
-TOPIC = "robot/pico/estado"
-
-client = mqtt.Client()
-
-try:
-    client.connect(BROKER, PORT, 60)
-    print(f"Conectado al broker MQTT en {BROKER}:{PORT}")
-except Exception as e:
-    print(f"Error al conectar con el broker MQTT: {e}")
-    exit()
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(SCRIPT_DIR, "modelo_pistachos.pth")
@@ -92,10 +77,6 @@ torch.set_num_threads(4)
 torch.set_grad_enabled(False)
 
 cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    print("Error: no se pudo abrir la cámara")
-    exit()
-
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 cap.set(cv2.CAP_PROP_FPS, 30)
@@ -116,6 +97,7 @@ fps_frame_count = 0
 current_fps = 0
 last_detections = []
 batch_processing = True
+
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -185,16 +167,6 @@ while True:
                         frame_detections += 1
                         detection_count += 1
                         current_frame_detections.append((x1, y1, x2, y2, confidence))
-                        
-                        msg = json.dumps({
-                            "objeto": "pistacho",
-                            "confianza": float(confidence)
-                        })
-                        result = client.publish(TOPIC, msg)
-                        if result.rc == 0:
-                            print(f"MQTT enviado a {TOPIC}: {msg}")
-                        else:
-                            print(f"Error al publicar en {TOPIC}")
             except:
                 pass
         
@@ -249,7 +221,5 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
-client.disconnect()
-print("Desconectado del broker MQTT")
 print(f"\nTotal de frames procesados: {frame_count}")
 print(f"Total de pistachos detectados: {detection_count}")

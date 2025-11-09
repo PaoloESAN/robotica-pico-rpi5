@@ -228,23 +228,62 @@ Esta sección explica cómo usar la cámara en el RPi5 para detectar objetos loc
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y python3-opencv python3-pip
-pip3 install opencv-python paho-mqtt numpy
+pip3 install opencv-python paho-mqtt numpy torch torchvision
 ```
 
-## Paso 2: Archivos del modelo incluidos
+### Librerías necesarias y sus propósitos:
 
-**Los archivos del modelo MobileNet SSD ya están incluidos en la carpeta `/rpi5` del proyecto:**
+- **opencv-python (cv2)**: Captura de video y procesamiento de imágenes
+- **paho-mqtt**: Cliente MQTT para publicar detecciones al broker
+- **numpy**: Operaciones matriciales y procesamiento de arrays
+- **torch**: Framework de deep learning (PyTorch) para ejecutar el modelo VGG16
+- **torchvision**: Utilidades de PyTorch para visión por computadora (transformaciones de imágenes y modelos pre-entrenados)
+
+> **Nota:** La instalación de PyTorch puede tardar varios minutos en Raspberry Pi 5. Si prefieres una instalación más ligera, puedes usar:
+> ```bash
+> pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+> ```
+
+## Paso 2: Descargar modelo de detección de pistachos
+
+**IMPORTANTE:** El modelo de pistachos (`modelo_pistachos.pth`) es demasiado grande para incluirlo en GitHub. Debes descargarlo manualmente:
+
+1. **Accede a la carpeta de Google Drive:**
+   
+   [Descargar modelo_pistachos.pth desde Google Drive](https://drive.google.com/drive/folders/1814wg9bwC7ZVNoGwz1JBUcgwl99mGPQg?usp=sharing)
+
+2. **Descarga el archivo `modelo_pistachos.pth`**
+
+3. **Coloca el archivo descargado en la carpeta `/rpi5`** del proyecto:
+   ```
+   robotica-final/
+   └── rpi5/
+       ├── InspectionVideoSystem.py
+       ├── modelo_pistachos.pth  ← Aquí debe estar
+       ├── MobileNetSSD_deploy.prototxt
+       └── MobileNetSSD_deploy.caffemodel
+   ```
+
+## Paso 3: Archivos del modelo MobileNet SSD
+
+Los archivos del modelo MobileNet SSD ya están incluidos en la carpeta `/rpi5` del proyecto:
 - `MobileNetSSD_deploy.prototxt` — Arquitectura del modelo
 - `MobileNetSSD_deploy.caffemodel` — Pesos pre-entrenados
 
-**No es necesario descargar nada adicional.** El script `InspectionVideoSystem.py` carga automáticamente estos archivos desde su propia carpeta.
+**No es necesario descargar nada adicional para MobileNet SSD.**
 
-## Paso 3: Script de detección con cámara
+## Paso 4: Script de detección con cámara
 
 El script `InspectionVideoSystem.py` en la carpeta `/rpi5` realiza:
 - Captura de video desde la cámara del RPi5
-- Detección de objetos en tiempo real usando MobileNet SSD con OpenCV
-- Publicación de detecciones al broker MQTT
+- Detección de pistachos en tiempo real usando VGG16 + OpenCV
+- Publicación de detecciones al broker MQTT en formato JSON:
+  ```json
+  {
+    "objeto": "pistacho",
+    "confianza": 0.95
+  }
+  ```
 
 Para ejecutarlo:
 
@@ -254,3 +293,13 @@ python3 InspectionVideoSystem.py
 ```
 
 o usando Thonny.
+
+**Presiona 'q' para detener la detección.**
+
+---
+
+## Enlace a recursos adicionales
+
+Todos los archivos grandes y recursos adicionales del proyecto están disponibles en:
+
+[Google Drive - Recursos del Proyecto](https://drive.google.com/drive/folders/1814wg9bwC7ZVNoGwz1JBUcgwl99mGPQg?usp=sharing)
