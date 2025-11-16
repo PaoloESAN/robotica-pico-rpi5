@@ -22,14 +22,38 @@ else:
     print("WiFi conectado, IP:", wlan.ifconfig())
 
 # Configurar servomotor en pin GPIO 15
-servo_pin = PWM(Pin(15))
-servo_pin.freq(50)  # Frecuencia de 50 Hz para servomotor estándar
+servo_pin_obj = Pin(15)
+servo_pwm = PWM(servo_pin_obj)
+servo_pwm.freq(50)  # 50 Hz típico para servos
+
+# Ajustes para MG946R
+min_pulse = 500         # microsegundos = 0 grados
+max_pulse = 2500        # microsegundos = 180 grados
+
+def pulse_to_duty_u16(pulse_us):
+    """Convierte microsegundos de pulso a duty_u16"""
+    periodo_us = int(1_000_000 / 50)   # 20000 para 50 Hz
+    duty = int(pulse_us / periodo_us * 65535)
+    if duty < 0:
+        duty = 0
+    elif duty > 65535:
+        duty = 65535
+    return duty
+
+def angle_to_pulse(angle):
+    """Convierte ángulo (0-180) a microsegundos de pulso"""
+    if angle < 0:
+        angle = 0
+    if angle > 180:
+        angle = 180
+    pulse = min_pulse + (angle / 180.0) * (max_pulse - min_pulse)
+    return int(pulse)
 
 def set_servo_angle(angle):
     """Mueve el servomotor a un ángulo específico (0-180 grados)"""
-    # Convertir ángulo a duty cycle (1000-9000 para rango 0-180 grados)
-    duty = int(1000 + (angle / 180) * 8000)
-    servo_pin.duty_u16(duty)
+    pulse = angle_to_pulse(angle)
+    duty = pulse_to_duty_u16(pulse)
+    servo_pwm.duty_u16(duty)
     print("Servomotor movido a:", angle, "grados")
 
 # ID cliente
@@ -58,12 +82,20 @@ def mqtt_callback(topic, msg):
         payload = ujson.loads(msg)
         print("Mensaje recibido en", topic, ":", payload)
         
-        # Buscar campo 'angulo' en el payload
-        if 'angulo' in payload:
-            angle = int(payload['angulo'])
-            # Asegurar que el ángulo esté en rango válido (0-180)
-            angle = max(0, min(180, angle))
-            set_servo_angle(angle)
+        # Solo activar servo si el objeto detectado es "pistachio"
+        if 'objeto' in payload and payload['objeto'].lower() == "pistachio":
+            print("Pistacho detectado! Activando servo...")
+            # Realizar secuencia de movimiento: 0 -> 90 -> 180 -> 0
+            set_servo_angle(0)
+            time.sleep(0.5)
+            set_servo_angle(90)
+            time.sleep(0.5)
+            set_servo_angle(180)
+            time.sleep(0.5)
+            set_servo_angle(0)
+        else:
+            print("Objeto no es pistacho, servo no se activa")
+        
     except Exception as e:
         print("Error procesando mensaje:", e)
 
@@ -72,7 +104,7 @@ def connect_mqtt():
     client.set_callback(mqtt_callback)
     client.connect()
     print("Conectado al broker MQTT en", secrets.BROKER_IP)
-    client.subscribe(b"robot/deteccion/ia")  # Subscribirse al topic de detección de IA
+    client.subscribe(b"robot/pico/estado")   # Subscribirse al topic de estado para mover servo
     return client
 
 try:
