@@ -298,8 +298,42 @@ o usando Thonny.
 
 ---
 
+## Conexión del servomotor (MG946R / servos típicos)
+
+Esta sección explica cómo conectar un servomotor típico (cable rojo, marrón y amarillo/ naranja) a la Raspberry Pi Pico W.
+
+- **Colores típicos del cable:**
+   - `Rojo`  : VCC (alimentación del servo) — normalmente +5V
+   - `Marrón`: GND (masa)
+   - `Amarillo/ Naranja`: Señal PWM (entrada de control)
+
+- **Conexión recomendada para la Pico W:**
+   - `Servo Rojo`  -> `VBUS` (40) del pico W, solo funciona si el pico W esta conectado por USB
+   - `Servo Marrón`-> `GND` (38) del pico W
+   - `Servo Amarillo` -> `GP15` (20) del Pico W
+- **Imagen Referencial**
+   -
+   
+
+
+- **Notas importantes y recomendaciones:**
+   - Los servos como el **MG946R** pueden consumir picos de corriente elevados al moverse. Usa una fuente de 5V capaz de suministrar corriente suficiente (por ejemplo 2–3 A o más, según el servo y la carga).
+   - Nunca alimentes servos de potencia significativa directamente desde la salida 3.3V de la Pico W. Usa una fuente 5V separada.
+   - Conectar las masas (GND) de la fuente 5V y de la Pico W es obligatorio para que la señal PWM sea referenciada correctamente.
+   - Añade un condensador de desacoplo (por ejemplo 470 µF–1000 µF, 16V) entre `5V` y `GND` cerca del conector del servo para suavizar picos de corriente.
+   - Si el servo se comporta de forma errática, considera añadir un diodo de protección o un circuito de filtrado, y revisa que la fuente entregue suficiente corriente.
+   - La mayoría de servos aceptan señal de 3.3V como lógica para el pin de señal; si tienes dudas, consulta la hoja de datos del servo o usa un conversor de nivel lógico.
+
+Ejemplo de conexión (resumen):
+
+ - `Fuente 5V (+)`  -> `Servo Rojo`
+ - `Fuente GND (-)` -> `Servo Marrón` AND `Pico W GND` (conectar ambas masas)
+ - `Pico W GP15`    -> `Servo Amarillo` (señal PWM)
+
+
 ## Enlace a recursos adicionales
 
 Todos los archivos grandes y recursos adicionales del proyecto están disponibles en:
 
 [Google Drive - Recursos del Proyecto](https://drive.google.com/drive/folders/1814wg9bwC7ZVNoGwz1JBUcgwl99mGPQg?usp=sharing)
+Siguiendo lo anterior evitarás problemas de suministro y referencia entre la Pico W y el servo.

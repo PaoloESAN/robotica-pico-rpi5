@@ -113,7 +113,6 @@ except Exception as e:
     print("Error mqtt connect:", e)
     mqtt = None
 
-count = 0
 while True:
     if mqtt is None:
         try:
@@ -122,7 +121,7 @@ while True:
             print("Reintento MQTT:", e)
             time.sleep(5)
             continue
-    
+
     # Procesar mensajes MQTT recibidos
     try:
         mqtt.check_msg()
@@ -130,13 +129,6 @@ while True:
         print("Error checking messages:", e)
         mqtt = None
         continue
-    
-    payload = ujson.dumps({"estado": "conectado", "contador": count})
-    try:
-        mqtt.publish(b"robot/pico/estado", payload)
-        print("Publicado:", payload)
-    except Exception as e:
-        print("Error publish:", e)
-        mqtt = None
-    count += 1
-    time.sleep(5)
+
+    # Solo escuchar; esperar un momento antes de volver a comprobar
+    time.sleep(1)
