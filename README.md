@@ -313,8 +313,7 @@ Esta sección explica cómo conectar un servomotor típico (cable rojo, marrón 
    - `Servo Amarillo` -> `GP15` (20) del Pico W
 - **Imagen Referencial**
    -
-   
-
+    <img width="842" height="596" alt="picow-pinout" src="https://github.com/user-attachments/assets/1090c2b2-0a6c-492f-bce1-2a369d17d361" />
 
 - **Notas importantes y recomendaciones:**
    - Los servos como el **MG946R** pueden consumir picos de corriente elevados al moverse. Usa una fuente de 5V capaz de suministrar corriente suficiente (por ejemplo 2–3 A o más, según el servo y la carga).
