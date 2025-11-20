@@ -1,4 +1,34 @@
-# 1) Instalar Docker en Raspberry Pi OS (RPi5)
+# 1) Configurar la hora del Raspberry Pi 5
+
+Es importante que el Raspberry Pi 5 tenga la hora correcta para el correcto funcionamiento de certificados SSL, logs y sincronización de eventos.
+
+### Verificar la hora actual
+
+```bash
+date
+timedatectl
+```
+
+### Sincronizar con servidor NTP (recomendado)
+
+```bash
+# Habilitar sincronización automática con servidor de tiempo
+sudo timedatectl set-ntp true
+
+# Verificar estado de sincronización
+timedatectl status
+```
+
+### Configurar manualmente (si no hay internet)
+
+```bash
+# Formato: YYYY-MM-DD HH:MM:SS
+sudo date -s "2025-11-19 14:30:00"
+```
+
+---
+
+# 2) Instalar Docker en Raspberry Pi OS (RPi5)
 
 ### Actualiza
 ```bash
@@ -11,7 +41,7 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 ```
 
-# 2) Preparar Mosquitto (broker MQTT) en Docker
+# 3) Preparar Mosquitto (broker MQTT) en Docker
 
 ### Crea una carpeta en el RPi5 para la configuración y datos:
 
@@ -55,7 +85,7 @@ Ver logs con: `sudo docker logs mosquitto` o mirar `~/mosquitto/log/mosquitto.lo
 
 (eclipse-mosquitto en Docker Hub es la imagen oficial y soporta multi-arquitecturas, incluida ARM.)
 
-# 3) Averigua la IP local de tu RPi5 (para que la Pico W la use)
+# 4) Averigua la IP local de tu RPi5 (para que la Pico W la use)
 
 En la RPi5 ejecuta:
 
@@ -68,7 +98,7 @@ ip addr show eth0    # o en cable Ethernet
 
 Anota la IP (ej. `192.168.1.42`). La Pico W deberá publicar hacia esa IP (broker). Si tu RPi5 usa localhost para el cliente host, úsalo en el script host; desde la Pico W debe usarse la IP real en la LAN.
 
-# 4) Flashear MicroPython en la Raspberry Pi Pico W
+# 5) Flashear MicroPython en la Raspberry Pi Pico W
 
 La forma más sencilla de instalar MicroPython en tu Pico W es usando **Thonny**:
 
@@ -90,7 +120,7 @@ La forma más sencilla de instalar MicroPython en tu Pico W es usando **Thonny**
 
 > **Nota:** Si la Pico W no aparece, intenta mantener presionado el botón **BOOTSEL** mientras la conectas por USB.
 
-# 5) Código MicroPython para la Pico W (publicar cada 5 s)
+# 6) Código MicroPython para la Pico W (publicar cada 5 s)
 
 Vamos a usar `umqtt.simple` (disponible en builds MicroPython)
 
@@ -140,7 +170,7 @@ El archivo `main.py` se encuentra en la carpeta `/picow` y hace lo siguiente:
 - Conecta al broker en la IP del RPi5
 - Publica `{"estado":"conectado"}` cada 5 segundos en `robot/pico/estado`
 
-## ⚠️ Configurar el archivo secrets.py
+## Configurar el archivo secrets.py
 
 El archivo `secrets.py` contiene **tus credenciales personales** de Wi-Fi y la dirección del broker MQTT. 
 
@@ -181,7 +211,7 @@ Se puede ver esto en Administrador de dispositivos, luego en Ver → Dispositivo
 
 > **Nota:** El `:` antes del nombre del archivo indica que se copiará a la raíz del sistema de archivos de la Pico W.
 
-# 6) Script Python en RPi5 (host) que se suscribe al topic
+# 7) Script Python en RPi5 (host) que se suscribe al topic
 
 En la RPi5 (host, no dentro del contenedor), crea un entorno y usa `paho-mqtt`:
 
@@ -201,7 +231,7 @@ python3 subscriber.py
 
 Deberías ver los JSON publicados por la Pico W imprimiéndose en la terminal cuando la Pico publique cada 5 segundos.
 
-# 7) Pruebas auxiliares (cliente de línea de comandos)
+# 8) Pruebas auxiliares (cliente de línea de comandos)
 
 En la RPi5 puedes instalar los clientes Mosquitto y usarlos para probar la conexión:
 
@@ -219,7 +249,7 @@ Si `mosquitto_sub` recibe mensajes, el broker funciona y la red está bien confi
 
 ---
 
-# 8) Detección de objetos con cámara usando MobileNet SSD
+# 9) Detección de objetos con cámara usando MobileNet SSD
 
 Esta sección explica cómo usar la cámara en el RPi5 para detectar objetos localmente usando OpenCV y MobileNet SSD.
 
@@ -298,41 +328,110 @@ o usando Thonny.
 
 ---
 
-## Conexión del servomotor (MG946R / servos típicos)
+## 10) Conexiones: Raspberry Pi Pico W ↔ Arduino Uno ↔ Servomotor
 
-Esta sección explica cómo conectar un servomotor típico (cable rojo, marrón y amarillo/ naranja) a la Raspberry Pi Pico W.
+Esta sección explica cómo conectar el sistema completo usando un **Bi-directional Logic Level Converter** para la comunicación serial entre Pico W (3.3V) y Arduino Uno (5V).
 
-- **Colores típicos del cable:**
-   - `Rojo`  : VCC (alimentación del servo) — normalmente +5V
-   - `Marrón`: GND (masa)
-   - `Amarillo/ Naranja`: Señal PWM (entrada de control)
+### Componentes necesarios
 
-- **Conexión recomendada para la Pico W:**
-   - `Servo Rojo`  -> `VBUS` (40) del pico W, solo funciona si el pico W esta conectado por USB
-   - `Servo Marrón`-> `GND` (38) del pico W
-   - `Servo Amarillo` -> `GP15` (20) del Pico W
-- **Imagen Referencial**
-   -
-    <img width="842" height="596" alt="picow-pinout" src="https://github.com/user-attachments/assets/1090c2b2-0a6c-492f-bce1-2a369d17d361" />
+- **Raspberry Pi Pico W**
+- **Arduino Uno**
+- **Bi-directional Logic Level Converter** (conversor de nivel lógico)
+- **Servomotor MG946R** (o similar)
+- **Fuente de alimentación externa 5V** (2-3A para el servo)
+- Cables de conexión
 
-- **Notas importantes y recomendaciones:**
-   - Los servos como el **MG946R** pueden consumir picos de corriente elevados al moverse. Usa una fuente de 5V capaz de suministrar corriente suficiente (por ejemplo 2–3 A o más, según el servo y la carga).
-   - Nunca alimentes servos de potencia significativa directamente desde la salida 3.3V de la Pico W. Usa una fuente 5V separada.
-   - Conectar las masas (GND) de la fuente 5V y de la Pico W es obligatorio para que la señal PWM sea referenciada correctamente.
-   - Añade un condensador de desacoplo (por ejemplo 470 µF–1000 µF, 16V) entre `5V` y `GND` cerca del conector del servo para suavizar picos de corriente.
-   - Si el servo se comporta de forma errática, considera añadir un diodo de protección o un circuito de filtrado, y revisa que la fuente entregue suficiente corriente.
-   - La mayoría de servos aceptan señal de 3.3V como lógica para el pin de señal; si tienes dudas, consulta la hoja de datos del servo o usa un conversor de nivel lógico.
+---
 
-Ejemplo de conexión (resumen):
+### A) Conexión Pico W ↔ Logic Level Converter ↔ Arduino Uno
 
- - `Fuente 5V (+)`  -> `Servo Rojo`
- - `Fuente GND (-)` -> `Servo Marrón` AND `Pico W GND` (conectar ambas masas)
- - `Pico W GP15`    -> `Servo Amarillo` (señal PWM)
+El **Logic Level Converter** tiene dos lados:
+- **LV (Low Voltage)**: Lado de 3.3V para la Pico W
+- **HV (High Voltage)**: Lado de 5V para el Arduino
 
+#### Conexiones del Logic Level Converter - Lado LV (3.3V - Pico W)
+
+| Level Converter LV | Raspberry Pi Pico W |
+|-------------------|---------------------|
+| LV                | 3V3 (Pin 36)        |
+| GND               | GND (Pin 38)        |
+| LV1               | GPIO 0 / TX (Pin 1) |
+| LV2               | GPIO 1 / RX (Pin 2) |
+
+#### Conexiones del Logic Level Converter - Lado HV (5V - Arduino Uno)
+
+| Level Converter HV | Arduino Uno    |
+|-------------------|----------------|
+| HV                | 5V             |
+| GND               | GND            |
+| HV1               | TX (Pin 1)     |
+| HV2               | RX (Pin 0)     |
+
+> **Importante:** Conecta TX del Pico al RX del Arduino y viceversa (cruzado). El level converter se encarga de esto, pero verifica la configuración de pines.
+
+---
+
+### B) Conexión Arduino Uno ↔ Servomotor MG946R
+
+El servomotor tiene 3 cables con los siguientes colores típicos:
+
+| Cable del Servo | Color          | Conexión                    |
+|----------------|----------------|-----------------------------|
+| VCC            | Rojo           | Fuente externa 5V (+)       |
+| GND            | Marrón/Negro   | GND común (fuente + Arduino)|
+| Señal PWM      | Amarillo/Naranja| Pin 9 del Arduino          |
+
+#### Diagrama de conexión del servomotor
+
+```
+Fuente 5V Externa (2-3A)
+    (+) -----> Servo VCC (Rojo)
+    (-) -----> Servo GND (Marrón) + Arduino GND
+    
+Arduino Uno
+    Pin 9 ---> Servo Señal (Amarillo/Naranja)
+    GND -----> GND común con fuente externa
+```
+
+---
+
+### C) Notas importantes y recomendaciones
+
+#### Alimentación del servomotor
+- **NUNCA** alimentes el servo MG946R directamente desde el pin 5V del Arduino — puede dañar el Arduino por exceso de consumo de corriente
+- Usa una **fuente de alimentación externa de 5V con capacidad de 2-3A o más**
+- Conecta **GND común** entre Arduino, fuente externa y servo (obligatorio)
+
+#### Condensador de desacoplo
+- Añade un **condensador electrolítico de 470µF - 1000µF (16V)** entre 5V y GND del servo
+- Esto suaviza picos de corriente y evita comportamiento errático del servo
+
+#### Protección
+- Considera añadir un **diodo de protección** (1N4007) en paralelo al servo para proteger contra picos de voltaje inverso
+
+#### Diagrama de conexión completo (resumen)
+
+```
+Raspberry Pi Pico W          Level Converter               Arduino Uno
+                            LV Side | HV Side
+3V3 (Pin 36) -----------> LV        HV <----------- 5V
+GND (Pin 38) -----------> GND       GND <---------- GND
+GPIO 0/TX (Pin 1) ------> LV1       HV1 <---------- RX (Pin 0)
+GPIO 1/RX (Pin 2) ------> LV2       HV2 <---------- TX (Pin 1)
+
+Arduino Uno                                          Servo MG946R
+Pin 9 ------------------------------------------------> Señal (Amarillo)
+GND --------------------------+---------------------> GND (Marrón)
+                              |
+Fuente Externa 5V (2-3A)      |
+    (+) -------------------------------------------> VCC (Rojo)
+    (-) --------------------------+
+```
+
+---
 
 ## Enlace a recursos adicionales
 
 Todos los archivos grandes y recursos adicionales del proyecto están disponibles en:
 
 [Google Drive - Recursos del Proyecto](https://drive.google.com/drive/folders/1814wg9bwC7ZVNoGwz1JBUcgwl99mGPQg?usp=sharing)
-Siguiendo lo anterior evitarás problemas de suministro y referencia entre la Pico W y el servo.
