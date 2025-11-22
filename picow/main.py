@@ -1,5 +1,8 @@
 # main.py (MicroPython para Pico W)
 # Se conecta a WiFi, se suscribe al topic MQTT y envía señal serial al Arduino
+# Conexiones:
+# - Pico W GP4 (Pin 6) -> Level Converter LV1 -> Arduino RX
+# - Pico W GP5 (Pin 7) -> Level Converter LV2 -> Arduino TX
 import time
 import network
 import ujson
@@ -8,8 +11,9 @@ from machine import UART, Pin
 import secrets
 
 # Configurar UART para comunicación con Arduino
-# TX: GPIO 0 (Pin 1), RX: GPIO 1 (Pin 2)
-uart = UART(0, baudrate=9600, tx=Pin(0), rx=Pin(1))
+# UART(1): TX=GP4, RX=GP5
+uart = UART(1, baudrate=9600, tx=Pin(4), rx=Pin(5))
+uart.init(bits=8, parity=None, stop=2)
 
 # Conectar a WiFi
 wlan = network.WLAN(network.STA_IF)
@@ -34,13 +38,24 @@ def send_command_to_arduino(command):
     """Envía un comando al Arduino por UART
     
     Args:
-        command: String con el comando a enviar
+        command: String o bytes con el comando a enviar
     """
     try:
-        uart.write(command + '\n')
+        if isinstance(command, str):
+            command = command.encode()
+        uart.write(command)
         print("Comando enviado al Arduino:", command)
     except Exception as e:
         print("Error enviando comando al Arduino:", e)
+
+def check_arduino_response():
+    """Verifica si hay respuesta del Arduino"""
+    if uart.any():
+        data = uart.read()
+        if data:
+            print("Respuesta del Arduino:", data)
+            return data
+    return None
 
 def mqtt_callback(topic, msg):
     """Callback para procesar mensajes MQTT recibidos"""
@@ -51,7 +66,12 @@ def mqtt_callback(topic, msg):
         # Solo activar servo si el objeto detectado es "pistachio"
         if 'objeto' in payload and payload['objeto'].lower() == "pistachio":
             print("Pistacho detectado! Enviando señal al Arduino...")
-            send_command_to_arduino("ACTIVATE")
+            send_command_to_arduino(b'A')  # Enviar 'A' para ACTIVATE
+            time.sleep(0.1)
+            # Verificar respuesta del Arduino
+            response = check_arduino_response()
+            if response == b'D':
+                print("Arduino confirmó: Secuencia completada")
         else:
             print("Objeto no es pistacho, no se envía señal")
         

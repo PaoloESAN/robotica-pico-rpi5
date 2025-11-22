@@ -355,19 +355,22 @@ El **Logic Level Converter** tiene dos lados:
 |-------------------|---------------------|
 | LV                | 3V3 (Pin 36)        |
 | GND               | GND (Pin 38)        |
-| LV1               | GPIO 0 / TX (Pin 1) |
-| LV2               | GPIO 1 / RX (Pin 2) |
+| LV1               | GPIO 4 / TX (Pin 6) |
+| LV2               | GPIO 5 / RX (Pin 7) |
 
 #### Conexiones del Logic Level Converter - Lado HV (5V - Arduino Uno)
 
 | Level Converter HV | Arduino Uno    |
 |-------------------|----------------|
 | HV                | 5V             |
-| GND               | GND            |
-| HV1               | TX (Pin 1)     |
-| HV2               | RX (Pin 0)     |
+| GND (rail negativo)               | GND (rail negativo)|
+| HV1               | RX (Pin 0)     |
+| HV2               | TX (Pin 1)     |
+>**Importante:** Conectar el GND del arduino al rail negativo
 
-> **Importante:** Conecta TX del Pico al RX del Arduino y viceversa (cruzado). El level converter se encarga de esto, pero verifica la configuración de pines.
+> **Importante:** Las conexiones están cruzadas por el level converter:
+> - Pico W GP4 → LV1 → HV1 → Arduino RX
+> - Pico W GP5 → LV2 → HV2 → Arduino TX
 
 ---
 
@@ -378,29 +381,44 @@ El servomotor tiene 3 cables con los siguientes colores típicos:
 | Cable del Servo | Color          | Conexión                    |
 |----------------|----------------|-----------------------------|
 | VCC            | Rojo           | Fuente externa 5V (+)       |
-| GND            | Marrón/Negro   | GND común (fuente + Arduino)|
+| GND            | Marrón/Negro   | GND común (osea rail negativo)|
 | Señal PWM      | Amarillo/Naranja| Pin 9 del Arduino          |
+> **Importante:** Conectar el GND del arduino al rail negativo
 
-#### Diagrama de conexión del servomotor
-
-```
-Fuente 5V Externa (2-3A)
-    (+) -----> Servo VCC (Rojo)
-    (-) -----> Servo GND (Marrón) + Arduino GND
-    
-Arduino Uno
-    Pin 9 ---> Servo Señal (Amarillo/Naranja)
-    GND -----> GND común con fuente externa
-```
 
 ---
 
-### C) Notas importantes y recomendaciones
+### C) Tabla de conexiones de alimentación en la protoboard
+
+**Todas las conexiones de alimentación deben hacerse a través de la protoboard usando los rails de poder:**
+
+#### Rail POSITIVO (+5V) de la protoboard
+
+| Fuente | Destino | 
+|--------|---------|
+| Fuente 5V Externa (+) | Rail Positivo |
+| Rail Positivo | Servo VCC (cable rojo) | 
+
+#### Rail NEGATIVO (GND) de la protoboard
+
+| Fuente | Destino |
+|--------|---------|
+| Fuente 5V Externa (-) | Rail Negativo |
+| Rail Negativo | Arduino GND |
+| Rail Negativo | Servo GND (cable marrón) |
+| Rail Negativo | Level Converter GND (lado HV) |
+
+> **IMPORTANTE:** Todos los GND deben estar conectados al mismo rail negativo de la protoboard. Esto garantiza que todos los dispositivos compartan la misma referencia de 0V.
+
+---
+
+### D) Notas importantes y recomendaciones
 
 #### Alimentación del servomotor
 - **NUNCA** alimentes el servo MG946R directamente desde el pin 5V del Arduino — puede dañar el Arduino por exceso de consumo de corriente
 - Usa una **fuente de alimentación externa de 5V con capacidad de 2-3A o más**
-- Conecta **GND común** entre Arduino, fuente externa y servo (obligatorio)
+- La fuente externa DEBE estar conectada al rail positivo (+5V) Y al rail negativo (GND) de la protoboard
+- **Conecta GND común** entre Arduino, fuente externa, servo y Level Converter a través del rail negativo (obligatorio)
 
 #### Condensador de desacoplo
 - Añade un **condensador electrolítico de 470µF - 1000µF (16V)** entre 5V y GND del servo
@@ -416,8 +434,8 @@ Raspberry Pi Pico W          Level Converter               Arduino Uno
                             LV Side | HV Side
 3V3 (Pin 36) -----------> LV        HV <----------- 5V
 GND (Pin 38) -----------> GND       GND <---------- GND
-GPIO 0/TX (Pin 1) ------> LV1       HV1 <---------- RX (Pin 0)
-GPIO 1/RX (Pin 2) ------> LV2       HV2 <---------- TX (Pin 1)
+GPIO 4/TX (Pin 6) ------> LV1       HV1 <---------- RX (Pin 0)
+GPIO 5/RX (Pin 7) ------> LV2       HV2 <---------- TX (Pin 1)
 
 Arduino Uno                                          Servo MG946R
 Pin 9 ------------------------------------------------> Señal (Amarillo)
@@ -430,8 +448,27 @@ Fuente Externa 5V (2-3A)      |
 
 ---
 
+### D) Protocolo de comunicación Pico W ↔ Arduino
+
+La comunicación es muy simple con caracteres individuales:
+
+| Comando | Origen | Destino | Significado |
+|---------|--------|---------|-------------|
+| `A` | Pico W | Arduino | ACTIVATE - Ejecutar secuencia del servo |
+| `D` | Arduino | Pico W | DONE - Secuencia completada |
+
+**Parámetros UART:**
+- Baud rate: **9600**
+- Data bits: **8**
+- Parity: **None**
+- Stop bits: **2**
+
+---
+
 ## Enlace a recursos adicionales
 
 Todos los archivos grandes y recursos adicionales del proyecto están disponibles en:
 
 [Google Drive - Recursos del Proyecto](https://drive.google.com/drive/folders/1814wg9bwC7ZVNoGwz1JBUcgwl99mGPQg?usp=sharing)
+
+[Conexion Pico Con Rasberry](https://electrocredible.com/raspberry-pi-pico-serial-uart-micropython/)
