@@ -67,11 +67,22 @@ def mqtt_callback(topic, msg):
         if 'objeto' in payload and payload['objeto'].lower() == "pistachio":
             print("Pistacho detectado! Enviando señal al Arduino...")
             send_command_to_arduino(b'A')  # Enviar 'A' para ACTIVATE
-            time.sleep(0.1)
-            # Verificar respuesta del Arduino
-            response = check_arduino_response()
-            if response == b'D':
-                print("Arduino confirmó: Secuencia completada")
+            
+            # Esperar respuesta del Arduino (con reintentos)
+            timeout = 2000  # 2 segundos de timeout
+            start_time = time.ticks_ms()
+            response_received = False
+            
+            while time.ticks_ms() - start_time < timeout:
+                response = check_arduino_response()
+                if response == b'D':
+                    print("Arduino confirmó: Secuencia completada")
+                    response_received = True
+                    break
+                time.sleep(0.1)
+            
+            if not response_received:
+                print("Advertencia: No se recibió confirmación del Arduino en 2s")
         else:
             print("Objeto no es pistacho, no se envía señal")
         

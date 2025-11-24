@@ -12,7 +12,7 @@
  * - Servo VCC -> Fuente externa 5V
  * - Servo GND -> GND común con Arduino y fuente
  * 
- * Protocolo: Recibe comando "ACTIVATE" (sin salto de línea)
+ * Protocolo: Recibe comando "A" (sin salto de línea)
  */
 
 #include <Servo.h>
@@ -52,14 +52,9 @@ void loop() {
 }
 
 void activateServo() {
-  // Secuencia de movimiento: 0 -> 90 -> 180 -> 0
+  // Secuencia de movimiento: 0 -> 180 -> 0
   Serial.println("Moviendo servo a 0 grados");
   myServo.write(0);
-  delay(500);
-  
-  Serial.println("Moviendo servo a 90 grados");
-  myServo.write(90);
-  delay(500);
   
   Serial.println("Moviendo servo a 180 grados");
   myServo.write(180);
