@@ -1,71 +1,77 @@
-/*
- * servo_control.ino - Arduino Uno
- * Recibe comandos por serial desde Raspberry Pi Pico W (vía level converter)
- * y controla un servomotor MG946R
- * 
- * Conexiones:
- * - Arduino TX (Pin 1) -> Level Converter HV2
- * - Arduino RX (Pin 0) -> Level Converter HV1
- * - Level Converter LV1 -> Pico W GP4 (Pin 6)
- * - Level Converter LV2 -> Pico W GP5 (Pin 7)
- * - Servo Signal -> Pin 9
- * - Servo VCC -> Fuente externa 5V
- * - Servo GND -> GND común con Arduino y fuente
- * 
- * Protocolo: Recibe comando "A" (sin salto de línea)
- */
-
 #include <Servo.h>
 
-Servo myServo;
-const int servoPin = 9;
-const byte ACTIVATE_CMD = 'A';  // Comando para activar servo
+Servo miServo; // Crear objeto servo
+const int servoPin = 9; // Pin donde conectas el servo
+char incomingByte; // Variable para leer el dato serial
 
 void setup() {
-  // Inicializar comunicación serial
-  Serial.begin(9600);
+  miServo.attach(servoPin); 
   
-  // Adjuntar servo al pin 9
-  myServo.attach(servoPin);
+  // Inicializar en posición 0
+  miServo.write(0);
   
-  // Posición inicial
-  myServo.write(0);
-  
-  Serial.println("Arduino listo - Esperando comandos...");
+  // Iniciar comunicación serial a 9600 baudios (igual que en Python)
+  Serial.begin(9600); 
 }
 
 void loop() {
-  // Verificar si hay datos disponibles en el puerto serial
+  // Verificar si hay datos disponibles desde Python
   if (Serial.available() > 0) {
-    // Leer un carácter
-    char command = Serial.read();
+    // Leer el dato
+    incomingByte = Serial.read();
     
-    // Procesar el comando
-    if (command == 'A') {  // 'A' para ACTIVATE
-      Serial.println("Comando ACTIVATE recibido - Ejecutando secuencia servo");
-      activateServo();
-    } else {
-      Serial.print("Comando desconocido: ");
-      Serial.println(command);
+    // Si recibimos el 1 se movera el servo
+    if (incomingByte == '1') {
+      prueba();
     }
-  }
+  }/*
+  else {
+     desac();
+  }*/
 }
 
-void activateServo() {
-  // Secuencia de movimiento: 0 -> 180 -> 0
-  Serial.println("Moviendo servo a 0 grados");
-  myServo.write(0);
+void activarSecuenciaServo() {
+  // Mover de 0 a 180 grados
+  for (int pos = 90; pos <= 180; pos += 2) { 
+    miServo.write(pos);              
+    delay(5); // Ajusta este delay para cambiar la velocidad de subida
+  }
   
-  Serial.println("Moviendo servo a 180 grados");
-  myServo.write(180);
-  delay(500);
+  delay(500); // Esperar medio segundo arriba
   
-  Serial.println("Moviendo servo a 0 grados");
-  myServo.write(0);
-  delay(500);
+  // Mover de 180 a 0 grados
+  for (int pos = 180; pos >= 90; pos -= 2) { 
+    miServo.write(pos);              
+    delay(5); // Ajusta este delay para cambiar la velocidad de bajada
+  }
+}
+void desac() {
+  // Mover de 0 a 180 grados
+  for (int pos = 90; pos >= 0; pos -= 2) { 
+    miServo.write(pos);              
+    delay(5); // Ajusta este delay para cambiar la velocidad de subida
+  }
   
-  Serial.println("Secuencia completada");
+  delay(500); // Esperar medio segundo arriba
   
-  // Enviar confirmación al Pico
-  Serial.write('D');  // 'D' para Done
+  // Mover de 180 a 0 grados
+  for (int pos = 0; pos <= 90; pos += 2) { 
+    miServo.write(pos);              
+    delay(5); // Ajusta este delay para cambiar la velocidad de bajada
+  }
+}
+void prueba() {
+  // Mover de 0 a 180 grados
+  for (int pos = 0; pos <= 90; pos += 2) { 
+    miServo.write(pos);              
+    delay(5); // Ajusta este delay para cambiar la velocidad de subida
+  }
+  
+  delay(500); // Esperar medio segundo arriba
+  
+  // Mover de 180 a 0 grados
+  for (int pos = 90; pos >= 0; pos -= 2) { 
+    miServo.write(pos);              
+    delay(5); // Ajusta este delay para cambiar la velocidad de bajada
+  }
 }
